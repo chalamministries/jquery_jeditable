@@ -104,6 +104,14 @@
         settings.autowidth  = 'auto' == settings.width;
         settings.autoheight = 'auto' == settings.height;
         
+        function getPlaceholder(e) {
+	        if($(e).attr("placeholder")) {
+		        return $(e).attr("placeholder");
+	        } else {
+		        return settings.placeholder;
+	        }
+        }
+        
         return this.each(function() {
                         
             /* Save this to self because this changes when scope changes. */
@@ -119,7 +127,8 @@
             
             /* If element is empty add something clickable (if requested) */
             if (!$.trim($(this).html())) {
-                $(this).html(settings.placeholder);
+	            
+                $(this).html(getPlaceholder($(this)));
             }
             
             $(this).bind(settings.event, function(e) {
@@ -166,7 +175,7 @@
                 
                 /* Remove placeholder text, replace is here because of IE. */
                 if ($(this).html().toLowerCase().replace(/(;|"|\/)/g, '') == 
-                    settings.placeholder.toLowerCase().replace(/(;|"|\/)/g, '')) {
+                    getPlaceholder($(this)).toLowerCase().replace(/(;|"|\/)/g, '')) {
                         $(this).html('');
                 }
                                 
@@ -314,7 +323,7 @@
                               callback.apply(self, [self.innerHTML, settings]);
                               /* TODO: this is not dry */                              
                               if (!$.trim($(self).html())) {
-                                  $(self).html(settings.placeholder);
+                                  $(self).html(getPlaceholder($(self)));
                               }
                           } else {
                               /* Add edited content and id of edited element to POST. */
@@ -349,7 +358,7 @@
                                       self.editing = false;
                                       callback.apply(self, [result, settings]);
                                       if (!$.trim($(self).html())) {
-                                          $(self).html(settings.placeholder);
+                                          $(self).html(getPlaceholder($(self)));
                                       }
                                   },
                                   error   : function(xhr, status, error) {
@@ -381,7 +390,7 @@
                         $(self).html(self.revert);
                         self.editing   = false;
                         if (!$.trim($(self).html())) {
-                            $(self).html(settings.placeholder);
+                            $(self).html(getPlaceholder($(self)));
                         }
                         /* Show tooltip again. */
                         if (settings.tooltip) {
@@ -412,31 +421,21 @@
                 buttons : function(settings, original) {
                     var form = this;
                     if (settings.submit) {
-                        /* If given html string use that. */
-                        if (settings.submit.match(/>$/)) {
-                            var submit = $(settings.submit).click(function() {
-                                if (submit.attr("type") != "submit") {
-                                    form.submit();
-                                }
-                            });
-                        /* Otherwise use button with given string as text. */
-                        } else {
-                            var submit = $('<button type="submit" />');
-                            submit.html(settings.submit);                            
-                        }
+                    	var submit = $('<button type="submit" class="btn btn-xs btn-success btn-mr5" />');
+                    	submit.html(settings.submit);
+                    	$(submit).click(function() {
+                            if (submit.attr("type") != "submit") {
+                                form.submit();
+                            }
+                        });
+
                         $(this).append(submit);
                     }
                     if (settings.cancel) {
-                        /* If given html string use that. */
-                        if (settings.cancel.match(/>$/)) {
-                            var cancel = $(settings.cancel);
-                        /* otherwise use button with given string as text */
-                        } else {
-                            var cancel = $('<button type="cancel" />');
-                            cancel.html(settings.cancel);
-                        }
-                        $(this).append(cancel);
-
+                        
+                        var cancel = $('<button type="cancel" class="btn btn-xs btn-danger" />');
+                        cancel.html(settings.cancel);
+                        
                         $(cancel).click(function(event) {
                             if ($.isFunction($.editable.types[settings.type].reset)) {
                                 var reset = $.editable.types[settings.type].reset;                                                                
@@ -446,14 +445,17 @@
                             reset.apply(form, [settings, original]);
                             return false;
                         });
+                        
+                        $(this).append(cancel);
+
                     }
                 }
             },
             text: {
                 element : function(settings, original) {
                     var input = $('<input />');
-                    if (settings.width  != 'none') { input.attr('width', settings.width);  }
-                    if (settings.height != 'none') { input.attr('height', settings.height); }
+                    if (settings.width  != 'none') { input.css('width', settings.width);  }
+                    /*if (settings.height != 'none') { input.css('height', settings.height); }*/
                     /* https://bugzilla.mozilla.org/show_bug.cgi?id=236791 */
                     //input[0].setAttribute('autocomplete','off');
                     input.attr('autocomplete','off');
@@ -531,7 +533,7 @@
         name       : 'value',
         id         : 'id',
         type       : 'text',
-        width      : 'auto',
+        width      : 'none',
         height     : 'auto',
         event      : 'click.editable',
         onblur     : 'cancel',
